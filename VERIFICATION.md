@@ -1,75 +1,60 @@
-# Verification report
+# Verification
 
-Initial verification was on 21 September 2026 on Windows using Node 24.11.1, npm 11.6.2, Python 3.12.14, and Chromium through Playwright CLI. The repository submission audit below was repeated on 22 September 2026 from a fresh GitHub clone.
+Last checked: 22 September 2026. Environment: Windows, Node 24.11.1, npm 11.6.2, Python 3.12.14, and Chromium.
 
-## Changes and issues fixed
+## Build and tests
 
-- Aborted requests and polling when the topology changes or the app unmounts; guarded against stale results restoring a cleared trace. Duplicate launches are blocked immediately.
-- Added a 45-second overall deadline, including hung network requests, runtime API response validation, simulation ID checks, and concise errors with backend startup guidance. Errors clear stale simulation status and permit retry.
-- Improved whitespace, case, quoted endpoint, empty input, and long-label handling. New-node placement avoids existing rectangles, including dragged nodes. Deleting a node removes all attached architecture edges.
-- Kept architecture connections and simulation connections on separate handles. Solid architecture edges remain separate from dashed traces. Active source, target, and trace edge are highlighted; node labels stay above paths.
-- Made the chat history viewport independently scrollable, kept the latest response visible, added accessibility status/error announcements, and fitted the canvas after topology changes and window resizing. History entries remain in memory until refresh.
-- Added a dependency lockfile, 15 lightweight tests, a favicon, expanded ignore rules, complete README, and a realistic recording script.
+The repository was cloned from GitHub into a clean directory and checked with:
 
-The supplied `simulation_service.py` is unchanged. SHA256, verified against the original ZIP:
+```bash
+npm ci
+npm test
+npm run build
+npm run preview
+```
+
+Dependency installation succeeded with no reported vulnerabilities. All **15 tests passed**: nine parser/layout tests and six API/polling tests. TypeScript compilation and the Vite production build passed. No lint script is configured.
+
+## Requirements
+
+| Requirement | Result |
+| --- | --- |
+| Add and remove nodes and edges through text | Passed in unit tests and 21 browser command scenarios. Deleting a node also removes its connected architecture edges. |
+| Input validation | Case, whitespace, quoted labels, aliases, duplicates, missing nodes/edges, self-connections, empty input, and malformed commands were checked. Invalid commands leave the graph unchanged. |
+| Architecture display | React Flow renders the initial Internet → Web Server → Database graph and subsequent edits, with node labels and types. |
+| Simulation API | The frontend sends only node `id` and `type`, receives a simulation ID, and polls the supplied service until completion. |
+| Separate simulation trace | Three returned trace edges were displayed while the architecture still contained one edge. The trace is cleared by a topology edit. |
+| Step exploration | Previous/Next, first/last-step boundaries, step count, latency, packets, status, and source/target/edge highlights were checked against the API response. |
+| Loading feedback | The UI displays the service status, elapsed time, and an indeterminate progress indicator. Duplicate runs are disabled. Completion, cancellation, and errors clear the loading state. |
+| Error handling | HTTP 400/404, unavailable API, polling failure, malformed responses, cancellation, and timeout handling were checked. Errors allow another run. |
+| Bonus features | Chat history, command aliases, validation, helpful error messages, and parser tests are included. |
+| Submission materials | Source, README, demo script, and a 64.84-second recording are included. Local documentation links resolve. |
+
+## Service integration
+
+The backend health endpoint returned HTTP 200. Empty node input returned HTTP 400, and an unknown simulation ID returned HTTP 404.
+
+| Submitted nodes | Completion time | Returned edges |
+| --- | --- | --- |
+| 1 | 15.25 seconds | 0 |
+| 2 | 15.25 seconds | 1 |
+| 4 | 15.25 seconds | 3 |
+
+Browser runs used the real service. The frontend made one POST followed by sequential polling requests and stopped polling after completion. Unit tests use response fixtures; browser fault injection is limited to error scenarios.
+
+The supplied `simulation_service.py` retains its original content and SHA256:
 
 ```text
 bb6d1209a854ba18f340bf1d7867d233c09e434afb13f1cb5240a0cb1507183d
 ```
 
-## Commands actually executed
+The `.gitattributes` rule preserves this file's original bytes across platform checkouts.
 
-```text
-npm install
-npm test
-npm run build
-python -m pip install fastapi uvicorn
-python -m uvicorn simulation_service:app --reload --host 127.0.0.1 --port 8000
-npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
-npm run preview -- --host 127.0.0.1 --port 4175 --strictPort
-npx --yes --package @playwright/cli playwright-cli ...
-```
+## Layout
 
-On this Windows host, npm/npx were invoked using their `.cmd` launchers. Python was invoked by its bundled absolute executable path because `python` was not on PATH. The README uses portable commands for a normal Python installation. Preview port 4173 was already occupied, so verification used 4175. No lint script was configured.
+Command-history height before and after simulation completion:
 
-## Results
-
-| Check | Result |
-| --- | --- |
-| Dependency installation | Passed; npm reported zero vulnerabilities. |
-| TypeScript and production build | Passed; after the loading UI update, Vite built 196 modules with no compile/build errors. |
-| Built-app preview | Passed on port 4175: real service run produced two trace edges, with zero browser console errors. |
-| Unit tests | 15 passed: 9 parser/layout tests and 6 API/polling tests. |
-| Backend health | HTTP 200, `{"status":"ok"}`. |
-| Invalid backend requests | Empty node list → HTTP 400; unknown simulation ID → HTTP 404. |
-| Real backend runs | 1, 2, and 4 nodes: HTTP 202 queued, running, then completed in 15.140–15.141 seconds; respectively 0, 1, and 3 edges. Schema and metrics validated. |
-| UI command tests | 21 scenarios passed, including all required exact command forms, case/whitespace, spaced labels, duplicates, missing nodes/edges, self-connections, malformed/empty input, and multi-edge deletion cleanup. |
-| Real UI API integration | Four-node run completed in 15.261 seconds in the final regression. One POST and 15 sequential GETs; request contained only `id` and `type`. Queued, running, and completed observed. Polling stopped afterward. |
-| Trace separation | Three returned edges rendered while the architecture remained at one edge. Returned paths absent from architecture were displayed normally. |
-| Step exploration | All steps checked against actual API edge data. Correct source/target highlighted, exactly one red current trace edge, step count, latency, packets, and status. Previous/Next boundaries and reverse navigation passed. |
-| Small and empty architectures in UI | One node → empty trace; two nodes → one step with both navigation controls disabled. Zero nodes → Run disabled. Actual service waits were 15.337 and 15.296 seconds. |
-| UI errors | Real backend 400 and 404 triggered by forwarding invalid requests; polling connection refusal and offline mode injected in the browser. Useful alert, error state, retry, and no stale overlay verified. |
-| Cancellation | Topology edit stopped polling; waited 17 more seconds and confirmed no stale trace reappeared. Reload stopped old polling too. |
-| Desktop and narrow layout | Checked at 1440×900, 800×900, and 375×900. No horizontal document overflow; all nodes fitted the canvas and step controls remained reachable. Screenshots visually inspected. |
-| Source integrity and cleanup | No frontend simulation implementation, LLM dependency, API key, database, authentication, debugging logs, or TODO placeholders added. |
-
-Unit tests use isolated response fixtures and an accelerated timeout timer; successful browser runs and the recording use the unchanged real service. The 15-second service delay was never shortened. Fault injection was limited to error testing, outside application code.
-
-## Limits and submission
-
-The project is designed for local review with two running processes. A deployed static build needs a same-origin `/api` reverse proxy. Architecture/chat state resets on refresh; the supplied backend stores jobs only in memory. Cancelling in the frontend does not cancel a job already accepted by the external service. Labels are limited to 80 characters; quote endpoints containing separator words. Direct canvas connection creation and keyboard deletion are intentionally disabled in favor of validated text commands.
-
-Browser verification used Chromium; Firefox and Safari were not tested. The included WebM recording has no narration and shows the real application and service wait. The submission package excludes `node_modules`, `dist`, virtual environments, Python caches, build metadata, and test-tool output. There are no known blockers to the requested local take-home submission.
-
-## Loading UI and chat layout regression
-
-After the requested UI changes, `npm test` passed all 15 tests and `npm run build` passed again. A real four-node browser run completed in **15.286 seconds**, using one POST and 15 GET requests. The request contained only node `id` and `type`; three trace edges appeared without changing the three architecture edges. Previous/Next navigation still worked.
-
-The loading card showed the real `running` status and an increasing elapsed timer. Its progress bar was indeterminate (`aria-valuenow` absent), because the supplied API does not report a completion percentage. The card disappeared on completion, architecture-edit cancellation, and network failure. Starting another run reset the elapsed timer to zero; failure left the Run button available for retry. No JavaScript runtime exceptions occurred; the intentionally offline request produced the expected network error.
-
-Measured command-history viewport heights before and after completion:
-
-| Browser viewport | Before | After |
+| Viewport | Before | After |
 | --- | --- | --- |
 | 1440 × 900 | 306 px | 306 px |
 | 1280 × 720 | 250 px | 250 px |
@@ -77,31 +62,21 @@ Measured command-history viewport heights before and after completion:
 | 800 × 900 | 306 px | 306 px |
 | 375 × 900 | 306 px | 306 px |
 
-There was no horizontal document overflow in these cases. Simulation content now expands the page instead of taking height away from the command history. On desktop, the architecture canvas stays visible while scrolling through the panels.
+All checked layouts had no horizontal document overflow. Nodes fitted within the canvas after its resize animation, and step controls remained accessible. Simulation results expand the page without reducing the chat area's height.
 
-The updated **64.84-second** demo was recorded against the production build on the local preview server, using the real backend. All four topology operations, the loading UI, and Next/Previous navigation were exercised. Its browser console had zero errors and warnings. After React Flow's 200 ms fitting animation settled, every node was confirmed inside the canvas at all five viewport sizes above.
+See the [completed view](docs/simulation-completed.png), [loading view](docs/simulation-loading.png), [narrow view](docs/simulation-narrow.png), and [demo recording](docs/demo.webm).
 
-See the [completed screenshot](docs/simulation-completed.png), [loading screenshot](docs/simulation-loading.png), and [demo recording](docs/demo.webm).
+## Repository contents
 
-## Submission audit — 22 September 2026
+The repository includes source, configuration, tests, documentation, and demo assets. Dependencies, build output, virtual environments, caches, logs, local configuration, and temporary files are ignored.
 
-A fresh clone of the public GitHub repository was installed with `npm ci`: 89 packages installed, with zero vulnerabilities reported. All 15 tests passed, and `npm run build` produced the frontend without TypeScript or build errors. The built clone was opened through Vite preview against the supplied service.
+Ignore rules passed checks for 47 excluded paths and 21 retained paths. The lockfile, tests, environment examples, and required demo recording remain eligible for tracking. No tracked files match the ignore rules.
 
-| Assignment requirement | Evidence and result |
-| --- | --- |
-| Add/remove nodes and edges through text | Implemented in `src/lib/commandParser.ts`; covered by parser tests and browser command checks. Removing a node cleans up its incident architecture edges. |
-| Spaces, case, duplicate and invalid input handling | Parser tests cover normalization, quoted labels, aliases, missing nodes/edges, duplicates, self-connections, and malformed input. |
-| React Flow nodes, edges, labels, and types | `ArchitectureCanvas.tsx` renders the initial Internet → Web Server → Database architecture and subsequent text edits. |
-| Real asynchronous service integration | `simulationApi.ts` posts only `id`/`type` and polls until completion. Fresh 1-, 2-, and 4-node service runs completed in 15.25 seconds with 0, 1, and 3 trace edges respectively. Health returned 200; empty input returned 400; an unknown simulation ID returned 404. |
-| Trace independent of architecture | The built frontend rendered three returned trace edges while its architecture still had one edge; the trace was cleared after a topology edit. |
-| Step exploration and metrics | Previous/Next boundaries, all step metrics, source/target highlights, and the active trace edge were checked against the actual API response. Polling stopped after completion. |
-| Loading feedback and usable layout | The real run displayed a progress indicator; the completed layout and controls worked at 1440, 800, and 375 px widths. The chat viewport remained 306 px high at these 900 px tall viewports. |
-| README and recording | README contains startup commands, supported inputs, API flow, proxy explanation, and design decisions. The 64.84-second recording meets the required 30–90-second duration. Local documentation links resolve. |
-| Bonus features | Chat history, command aliases, input validation, helpful errors, and lightweight tests are present. See the README's Bonus evidence section. |
-| Submission excludes generated files | No tracked dependency folders, builds, virtual environments, caches, logs, or test-run output. The final repository contains only source, configuration, tests, documentation, and curated demo evidence. |
+## Limitations
 
-The expanded `.gitignore` was checked against **47 paths that must be ignored** and **21 paths that must remain eligible for tracking**, including `docs/demo.webm`, both test files, the lockfile, and shareable environment examples. No already-tracked files matched the ignore rules, so no tracked-file removal was necessary. The demo, screenshots, test files, lockfile, and verification documentation remain intentionally included for review.
-
-The Git blob for `simulation_service.py` still matches the original SHA256 recorded above. Windows checkout initially converted its LF endings to CRLF without changing the code; `.gitattributes` now disables that conversion for this supplied file. A checkout with that attribute reproduced the recorded original hash byte for byte. The original download ZIP was no longer available at its earlier path during this audit; the original hash and retained original source were used for this integrity check.
-
-One responsive-browser assertion initially ran before React Flow finished fitting the resized canvas. Waiting for the actual node bounds to fit, instead of relying on a fixed sleep, passed at all checked widths. No application code changes were required by this audit.
+- Local use requires the frontend and simulation service to run separately. Static hosting needs a same-origin `/api` reverse proxy.
+- Architecture and chat history reset on refresh. Backend jobs are stored in memory.
+- Cancelling frontend polling does not stop a job already accepted by the service.
+- Node labels are limited to 80 characters. Labels containing command separators need quotes.
+- Topology changes use text commands; direct drag-to-connect and keyboard deletion are disabled.
+- Browser checks covered Chromium. Firefox and Safari were not tested.
