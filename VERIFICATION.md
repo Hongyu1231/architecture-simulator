@@ -28,7 +28,7 @@ Dependency installation succeeded with no reported vulnerabilities. All **15 tes
 | Loading feedback | The UI displays the service status, elapsed time, and an indeterminate progress indicator. Duplicate runs are disabled. Completion, cancellation, and errors clear the loading state. |
 | Error handling | HTTP 400/404, unavailable API, polling failure, malformed responses, cancellation, and timeout handling were checked. Errors allow another run. |
 | Bonus features | Chat history, command aliases, validation, helpful error messages, and parser tests are included. |
-| Submission materials | Source, README, demo script, and a 64.84-second recording are included. Local documentation links resolve. |
+| Submission materials | Source, README, demo script, and a Loom demo link are included. Local documentation links resolve. |
 
 ## Service integration
 
@@ -64,13 +64,13 @@ Command-history height before and after simulation completion:
 
 All checked layouts had no horizontal document overflow. Nodes fitted within the canvas after its resize animation, and step controls remained accessible. Simulation results expand the page without reducing the chat area's height.
 
-See the [completed view](docs/simulation-completed.png), [loading view](docs/simulation-loading.png), [narrow view](docs/simulation-narrow.png), and [demo recording](docs/demo.webm).
+See the [completed view](docs/simulation-completed.png), [loading view](docs/simulation-loading.png), [narrow view](docs/simulation-narrow.png), and [demo recording](https://www.loom.com/share/1e3015b7067d41bf828a05b0ba520f67).
 
 ## Repository contents
 
 The repository includes source, configuration, tests, documentation, and demo assets. Dependencies, build output, virtual environments, caches, logs, local configuration, and temporary files are ignored.
 
-Ignore rules passed checks for 47 excluded paths and 21 retained paths. The lockfile, tests, environment examples, and required demo recording remain eligible for tracking. No tracked files match the ignore rules.
+The lockfile, tests, and environment examples remain eligible for tracking. The demo is linked from Loom; local video files are ignored. No tracked files match the ignore rules.
 
 ## Limitations
 

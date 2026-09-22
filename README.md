@@ -6,7 +6,7 @@ The canvas keeps architecture state (labels, positions, and architecture edges) 
 
 ## Submission evidence
 
-- [65-second demo recording](docs/demo.webm)
+- [Demo recording on Loom](https://www.loom.com/share/1e3015b7067d41bf828a05b0ba520f67)
 - [Completed simulation screenshot](docs/simulation-completed.png)
 - [Requirement checklist and verification results](VERIFICATION.md)
 
