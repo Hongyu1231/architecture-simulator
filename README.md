@@ -8,6 +8,7 @@ The canvas keeps architecture state (labels, positions, and architecture edges) 
 
 - [65-second demo recording](docs/demo.webm)
 - [Completed simulation screenshot](docs/simulation-completed.png)
+- [Requirement checklist and verification results](VERIFICATION.md)
 
 The recording shows the command flow, a real run against the supplied service, the loading state while the service is working, and the completed trace. The screenshot is a post-run view for reviewing the completed result and the surrounding command history.
 

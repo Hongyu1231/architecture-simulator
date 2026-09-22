@@ -1,6 +1,6 @@
 # Verification report
 
-Verified on 21 September 2026 on Windows using Node 24.11.1, npm 11.6.2, Python 3.12.14, and Chromium through Playwright CLI.
+Initial verification was on 21 September 2026 on Windows using Node 24.11.1, npm 11.6.2, Python 3.12.14, and Chromium through Playwright CLI. The repository submission audit below was repeated on 22 September 2026 from a fresh GitHub clone.
 
 ## Changes and issues fixed
 
@@ -82,3 +82,26 @@ There was no horizontal document overflow in these cases. Simulation content now
 The updated **64.84-second** demo was recorded against the production build on the local preview server, using the real backend. All four topology operations, the loading UI, and Next/Previous navigation were exercised. Its browser console had zero errors and warnings. After React Flow's 200 ms fitting animation settled, every node was confirmed inside the canvas at all five viewport sizes above.
 
 See the [completed screenshot](docs/simulation-completed.png), [loading screenshot](docs/simulation-loading.png), and [demo recording](docs/demo.webm).
+
+## Submission audit — 22 September 2026
+
+A fresh clone of the public GitHub repository was installed with `npm ci`: 89 packages installed, with zero vulnerabilities reported. All 15 tests passed, and `npm run build` produced the frontend without TypeScript or build errors. The built clone was opened through Vite preview against the supplied service.
+
+| Assignment requirement | Evidence and result |
+| --- | --- |
+| Add/remove nodes and edges through text | Implemented in `src/lib/commandParser.ts`; covered by parser tests and browser command checks. Removing a node cleans up its incident architecture edges. |
+| Spaces, case, duplicate and invalid input handling | Parser tests cover normalization, quoted labels, aliases, missing nodes/edges, duplicates, self-connections, and malformed input. |
+| React Flow nodes, edges, labels, and types | `ArchitectureCanvas.tsx` renders the initial Internet → Web Server → Database architecture and subsequent text edits. |
+| Real asynchronous service integration | `simulationApi.ts` posts only `id`/`type` and polls until completion. Fresh 1-, 2-, and 4-node service runs completed in 15.25 seconds with 0, 1, and 3 trace edges respectively. Health returned 200; empty input returned 400; an unknown simulation ID returned 404. |
+| Trace independent of architecture | The built frontend rendered three returned trace edges while its architecture still had one edge; the trace was cleared after a topology edit. |
+| Step exploration and metrics | Previous/Next boundaries, all step metrics, source/target highlights, and the active trace edge were checked against the actual API response. Polling stopped after completion. |
+| Loading feedback and usable layout | The real run displayed a progress indicator; the completed layout and controls worked at 1440, 800, and 375 px widths. The chat viewport remained 306 px high at these 900 px tall viewports. |
+| README and recording | README contains startup commands, supported inputs, API flow, proxy explanation, and design decisions. The 64.84-second recording meets the required 30–90-second duration. Local documentation links resolve. |
+| Bonus features | Chat history, command aliases, input validation, helpful errors, and lightweight tests are present. See the README's Bonus evidence section. |
+| Submission excludes generated files | No tracked dependency folders, builds, virtual environments, caches, logs, or test-run output. The final repository contains only source, configuration, tests, documentation, and curated demo evidence. |
+
+The expanded `.gitignore` was checked against **47 paths that must be ignored** and **21 paths that must remain eligible for tracking**, including `docs/demo.webm`, both test files, the lockfile, and shareable environment examples. No already-tracked files matched the ignore rules, so no tracked-file removal was necessary. The demo, screenshots, test files, lockfile, and verification documentation remain intentionally included for review.
+
+The Git blob for `simulation_service.py` still matches the original SHA256 recorded above. Windows checkout initially converted its LF endings to CRLF without changing the code; `.gitattributes` now disables that conversion for this supplied file. A checkout with that attribute reproduced the recorded original hash byte for byte. The original download ZIP was no longer available at its earlier path during this audit; the original hash and retained original source were used for this integrity check.
+
+One responsive-browser assertion initially ran before React Flow finished fitting the resized canvas. Waiting for the actual node bounds to fit, instead of relying on a fixed sleep, passed at all checked widths. No application code changes were required by this audit.
